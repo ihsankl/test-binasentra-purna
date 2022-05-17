@@ -2,7 +2,7 @@ import { Alert, Button, Grid, Paper, Stack, Table, TableBody, TableCell, TableHe
 import { Box } from '@mui/system'
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAsuransiByUserId } from '../../redux/slicer/asuransi.slicer';
+import { fetchAsuransiByUserId } from '../redux/slicer/asuransi.slicer';
 
 const MyRequest = () => {
     const dispath = useDispatch();
@@ -27,7 +27,7 @@ const MyRequest = () => {
         dispath(fetchAsuransiByUserId(data));
     };
     return (
-        <Box padding="2em" sx={{ background: "#DDD", height: "2000px" }}>
+        <Box padding="2em">
             <Paper sx={{
                 padding: "1em",
                 width: "100%",

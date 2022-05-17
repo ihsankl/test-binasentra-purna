@@ -8,4 +8,6 @@ export const OKUPASI = [
 
 // placeholder
 export const SIGNED_IN = false;
-export const ADMIN = true;
+export const ADMIN = false;
+
+export const API_URL = 'http://localhost:5000/api';

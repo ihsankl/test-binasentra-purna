@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import {
     Button,
     CssBaseline,
@@ -8,18 +9,21 @@ import {
     Typography,
     Container,
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
-import { login } from '../../redux/slicer/auth.slicer';
 import { useDispatch, useSelector } from 'react-redux';
+import { createUser } from '../../redux/slicer/user.slicer';
 import { useRouter } from 'next/router';
 
 const defaultValues = {
     email: '',
+    name: '',
     password: '',
+    rePassword: '',
 };
 
-const DisabledLink = styled(`button`)(({ }) => ({
+const Creator = process.env.REACT_APP_CREATOR;
+
+const DisabledLink = styled(`button`)(({ theme }) => ({
     '&[disabled]': {
         'color': 'grey',
         'cursor': 'default',
@@ -31,12 +35,30 @@ const DisabledLink = styled(`button`)(({ }) => ({
     },
 }));
 
-const Login = () => {
+const Copyright = (props) => {
+    return (
+        <Typography
+            variant="body2"
+            color="text.secondary"
+            align="center"
+            {...props
+            }>
+            {'Copyright © '}
+            <Link color="inherit" href="https://github.com/ihsankl">
+                {Creator}
+            </Link>{' '}
+            {new Date().getFullYear()}
+            {'.'}
+        </Typography>
+    );
+};
+
+
+const Register = () => {
     const dispatch = useDispatch();
     const router = useRouter();
-    const AuthState = useSelector((state) => state.Auth);
-    const auth = AuthState.isLoggedIn;
     const [formValues, setFormValues] = useState(defaultValues);
+    const UserState = useSelector((state) => state.User);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -47,30 +69,14 @@ const Login = () => {
     };
 
     useEffect(() => {
-        if (auth) {
-            router.push('/');
+        if (UserState.isSuccess) {
+            router.push('/login');
         }
-
         return () => {
 
-        }
-    }, [auth]);
+        };
+    }, [UserState]);
 
-    const handleOnsubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const data = {
-                email: formValues.email,
-                password: formValues.password,
-            };
-            dispatch(login(data));
-            // get return url from query parameters or default to '/'
-            const returnUrl = router.query.returnUrl || '/';
-            router.push(returnUrl);
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
 
     return (
         <Container component="main" maxWidth="xs">
@@ -84,21 +90,39 @@ const Login = () => {
                 }}
             >
                 <Typography component="h1" variant="h5">
-                    Sign in
+                    Register
                 </Typography>
                 <Box
                     component="form"
-                    onSubmit={handleOnsubmit}
+                    onSubmit={(e) => e.preventDefault()}
                     noValidate sx={{ mt: 1 }}
                 >
                     <TextField
                         margin="normal"
                         required
+                        error={!formValues.name}
+                        helperText={!formValues.name ? 'Username is required' : ''}
+                        fullWidth
+                        value={formValues.name}
+                        onChange={handleInputChange}
+                        id="name"
+                        label="Name"
+                        type='name'
+                        name="name"
+                        autoComplete="name"
+                        autoFocus
+                    />
+                    <TextField
+                        margin="normal"
+                        required
+                        error={!formValues.email}
+                        helperText={!formValues.email ? 'Username is required' : ''}
                         fullWidth
                         value={formValues.email}
                         onChange={handleInputChange}
                         id="email"
                         label="Email"
+                        type='email'
                         name="email"
                         autoComplete="email"
                         autoFocus
@@ -106,6 +130,8 @@ const Login = () => {
                     <TextField
                         margin="normal"
                         required
+                        error={!formValues.password}
+                        helperText={!formValues.password ? 'Password is required' : ''}
                         fullWidth
                         value={formValues.password}
                         onChange={handleInputChange}
@@ -115,13 +141,37 @@ const Login = () => {
                         id="password"
                         autoComplete="current-password"
                     />
+                    <TextField
+                        margin="normal"
+                        required
+                        error={formValues.rePassword !== formValues.password}
+                        helperText={formValues.rePassword !== formValues.password ?
+                            'Password is not match' : ''}
+                        fullWidth
+                        value={formValues.rePassword}
+                        onChange={handleInputChange}
+                        name="rePassword"
+                        label="re-Type Your Password"
+                        type="password"
+                        id="rePassword"
+                    />
                     <Button
                         type="submit"
                         fullWidth
                         variant="contained"
                         sx={{ mt: 3, mb: 2 }}
+                        onClick={() => {
+                            const data = {
+                                email: formValues.email,
+                                password: formValues.password,
+                                name: formValues.name,
+                            };
+                            if (formValues.password === formValues.rePassword) {
+                                dispatch(createUser(data));
+                            }
+                        }}
                     >
-                        Sign In
+                        Sign Up
                     </Button>
                     <Grid container>
                         <Grid item xs>
@@ -137,13 +187,15 @@ const Login = () => {
                         </Grid>
                         <Grid item>
                             <Link
-                                onClick={() => router.push('/register')}
                                 sx={{
                                     cursor: 'pointer',
                                 }}
+                                onClick={() => {
+                                    router.push('/login');
+                                }}
                                 variant="body2"
                             >
-                                {'Don\'t have an account? Sign Up'}
+                                {'Already have an account? Sign In'}
                             </Link>
                         </Grid>
                     </Grid>
@@ -154,23 +206,4 @@ const Login = () => {
     );
 };
 
-
-const Copyright = (props) => {
-    return (
-        <Typography
-            variant="body2"
-            color="text.secondary"
-            align="center"
-            {...props
-            }>
-            {'Copyright © '}
-            <Link color="inherit" href="https://github.com/ihsankl">
-                {`ihsankl`}
-            </Link>{' '}
-            {new Date().getFullYear()}
-            {'.'}
-        </Typography>
-    );
-};
-
-export default Login;
+export default Register;

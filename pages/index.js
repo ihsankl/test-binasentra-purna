@@ -1,355 +1,217 @@
-import {
-  Autocomplete,
-  Checkbox,
-  Divider,
-  FormControl,
-  FormControlLabel,
-  FormHelperText,
-  FormLabel,
-  Grid,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  MenuItem,
-  OutlinedInput,
-  Radio,
-  RadioGroup,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-  useTheme
-} from '@mui/material'
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import { useState } from 'react';
-import { Box } from '@mui/system';
-import { JANGKA_WAKTU, OKUPASI } from '../constant';
+import * as React from 'react';
+import { styled } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import MuiDrawer from '@mui/material/Drawer';
+import Box from '@mui/material/Box';
+import MuiAppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import Container from '@mui/material/Container';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import MainListItems from './dashboard/listItems';
+import Content from './dashboard/Content';
+import { useRouter } from 'next/router';
+import { Card, CardActionArea, CardContent, Menu, MenuItem, Stack } from '@mui/material';
+import { capitalizeFirstLetter } from '../helper';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../redux/slicer/auth.slicer';
 
-const defaultValues = {
-  jangkaWaktu: 1,
-  okupasi: "Rumah",
-  hargaBangunan: 0,
-  konstruksi: 1,
-  alamat: "",
-  provinsi: "",
-  kota: "",
-  kabupaten: "",
-  daerah: "",
-  gempa: false,
+const drawerWidth = 240;
+const isMain = true;
+
+const AppBar = styled(MuiAppBar, {
+    shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+    zIndex: theme.zIndex.drawer + 1,
+    transition: theme.transitions.create(['width', 'margin'], {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+    }),
+    ...(open && {
+        marginLeft: drawerWidth,
+        width: `calc(100% - ${drawerWidth}px)`,
+        transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+    }),
+}));
+
+const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
+    ({ theme, open }) => ({
+        '& .MuiDrawer-paper': {
+            position: 'relative',
+            whiteSpace: 'nowrap',
+            width: drawerWidth,
+            transition: theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+            }),
+            boxSizing: 'border-box',
+            ...(!open && {
+                overflowX: 'hidden',
+                transition: theme.transitions.create('width', {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.leavingScreen,
+                }),
+                width: theme.spacing(7),
+                [theme.breakpoints.up('sm')]: {
+                    width: theme.spacing(9),
+                },
+            }),
+        },
+    }),
+);
+
+function DashboardContent() {
+    const AuthState = useSelector((state) => state.Auth);
+    const tokens = AuthState.tokens;
+    const UserData = AuthState.userData;
+    const isAdmin = UserData?.role === 'admin';
+
+    const router = useRouter();
+    const dispatch = useDispatch();
+    const [menu, setMenu] = React.useState(!isAdmin ? 'profile' : 'request');
+    const [anchorEl, setAchorEl] = React.useState(null);
+
+    const [open, setOpen] = React.useState(false);
+    const toggleDrawer = () => {
+        setOpen(!open);
+    };
+
+    return (
+        <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+            <AppBar position="absolute" open={open}>
+                <Toolbar
+                    sx={{
+                        pr: '24px', // keep right padding when drawer closed
+                    }}
+                >
+                    {/* <IconButton
+                        edge="start"
+                        color="inherit"
+                        aria-label="open drawer"
+                        onClick={toggleDrawer}
+                        sx={{
+                            marginRight: '36px',
+                            ...(open && { display: 'none' }),
+                        }}
+                    >
+                        <MenuIcon />
+                    </IconButton> */}
+                    <Typography
+                        component="h1"
+                        variant="h6"
+                        color="inherit"
+                        noWrap
+                        sx={{ flexGrow: 1 }}
+                    >
+                        {/* {capitalizeFirstLetter(menu)} */}
+                    </Typography>
+                    <IconButton onClick={(e) => setAchorEl(e.currentTarget)} color="inherit">
+                        <AccountCircleIcon />
+                    </IconButton>
+                    <Menu
+                        id="menu-appbar"
+                        anchorEl={anchorEl}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        open={!!anchorEl}
+                        onClose={() => setAchorEl(null)}
+                    >
+                        <MenuItem onClick={() => {
+                            setMenu('profile');
+                            setAchorEl(null)
+                        }}>
+                            My Profile
+                        </MenuItem>
+                        <MenuItem onClick={() => {
+                            const data = {
+                                refreshToken: tokens.refresh.token
+                            };
+                            dispatch(logout(data));
+                        }}>
+                            Logout
+                        </MenuItem>
+                    </Menu>
+                </Toolbar>
+            </AppBar>
+            {/* <Drawer variant="permanent" open={open}>
+                <Toolbar
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        px: [1],
+                    }}
+                >
+                    <IconButton onClick={toggleDrawer}>
+                        <ChevronLeftIcon />
+                    </IconButton>
+
+                </Toolbar>
+                <Divider />
+                <List component="nav">
+                    <MainListItems setMenu={setMenu} />
+                    <Divider sx={{ my: 1 }} />
+                </List>
+            </Drawer> */}
+            <Box
+                component="main"
+                sx={{
+                    backgroundColor: (theme) =>
+                        theme.palette.mode === 'light'
+                            ? theme.palette.grey[100]
+                            : theme.palette.grey[900],
+                    flexGrow: 1,
+                    height: '100vh',
+                    overflow: 'auto',
+                }}
+            >
+                <Toolbar />
+                <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+                    <Grid container spacing={3}>
+                        <Grid item xs={12}>
+                            <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', minHeight: '450px' }}>
+                                <Stack direction='row' gap='1em' flexWrap='wrap'>
+                                    <Card >
+                                        <CardActionArea onClick={() => router.push('/request')} sx={{ padding: '1em 2em' }}>
+                                            <CardContent >
+                                                Pengajuan Asuransi Baru
+                                            </CardContent>
+                                        </CardActionArea>
+                                    </Card>
+                                    <Card >
+                                        <CardActionArea onClick={() => router.push('/dashboard')} sx={{ padding: '1em 2em' }}>
+                                            <CardContent >
+                                                Dashboard
+                                            </CardContent>
+                                        </CardActionArea>
+                                    </Card>
+                                </Stack>
+                            </Paper>
+                        </Grid>
+                    </Grid>
+                </Container>
+            </Box>
+        </Box>
+    );
 }
 
-const Home = () => {
-  const theme = useTheme();
-  const [formValues, setFormValues] = useState(defaultValues);
-  const [provinsiValue, setProvinsiValue] = useState('');
-  const ProvinsiData = [];
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormValues({
-      ...formValues,
-      [name]: value,
-    });
-  };
-
-  return (
-    <section style={{ padding: "2em" }}>
-      {/* HEADER */}
-      <Stack direction={"row"} justifyContent="space-between">
-        <Typography variant="h4" gutterBottom component="div">
-          Asuransi Kebakaran
-        </Typography>
-        <IconButton style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <ArrowDownwardIcon />
-        </IconButton>
-      </Stack>
-      <Divider />
-      {/* ---HEADER--- */}
-
-      {/* MAIN CONTENT */}
-      <Grid container spacing={2} marginY={2}>
-        {/* LEFT SIDE */}
-        <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
-            <Typography variant="subtitle1" gutterBottom component="div">
-              Jangka Waktu Pertanggungan
-            </Typography>
-            <Select
-              fullWidth
-              id="jangka-waktu-penggunaan"
-              name='jangkaWaktu'
-              displayEmpty
-              value={formValues.jangkaWaktu}
-              onChange={handleChange}
-            >
-              {JANGKA_WAKTU.map((value, index) => {
-                return (
-                  <MenuItem
-                    key={`jangka-waktu-${index}`}
-                    value={value}
-                  >
-                    {value}
-                  </MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <Box marginY={2} />
-          <FormControl fullWidth>
-            <Typography variant="subtitle1" gutterBottom component="div">
-              Okupasi
-            </Typography>
-            <Select
-              fullWidth
-              id="jangka-waktu-penggunaan"
-              name='okupasi'
-              value={formValues.okupasi}
-              onChange={handleChange}
-            >
-              {OKUPASI.map((value, index) => {
-                return (
-                  <MenuItem
-                    key={`okupasi-${index}`}
-                    value={value}
-                  >
-                    {value}
-                  </MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <Box marginY={2} />
-          <FormControl fullWidth>
-            <Typography variant="subtitle1" gutterBottom component="div">
-              Harga Bangunan
-            </Typography>
-            <OutlinedInput
-              id="outlined-basic"
-              variant="outlined"
-              name="hargaBangunan"
-              displayEmpty
-              type='number'
-              value={formValues.hargaBangunan}
-              onChange={handleChange}
-              startAdornment={<InputAdornment position="start">Rp.</InputAdornment>}
-            />
-          </FormControl>
-          <Box marginY={2} />
-        </Grid>
-        {/* RIGHT SIDE */}
-        <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
-            <Typography variant="subtitle1" gutterBottom component="div">
-              Alamat Objek Pertanggungan
-            </Typography>
-            <TextField
-              multiline
-              rows={6}
-              id="outlined-basic"
-              variant="outlined"
-              name="alamat"
-              displayEmpty
-              value={formValues.alamat}
-              onChange={handleChange}
-            />
-          </FormControl>
-          <Box marginY={2} />
-          <FormControl fullWidth>
-            <Typography variant="subtitle1" gutterBottom component="div">
-              Provinsi
-            </Typography>
-            <Autocomplete
-              value={provinsiValue}
-              onChange={(event, newValue) => {
-                const value = { ...formValues };
-                value.provinsi = newValue?.id;
-                setProvinsiValue(newValue?.name);
-                setFormValues(value);
-              }}
-              name="provinsi"
-              options={ProvinsiData.map((item) => {
-                return {
-                  ...item, label: `${item.name}`,
-                };
-              })}
-              // eslint-disable-next-line max-len
-              renderInput={(params) =>
-                <TextField
-                  // VALIDATION
-                  // error={!formValues.provinsi} 
-                  {...params}
-                />
-              }
-            />
-            {/* VALIDATION */}
-            {/* {!formValues.provinsi &&
-              <FormHelperText error={!formValues.provinsi}>
-                Provinsi Harus diisi!
-              </FormHelperText>
-            } */}
-          </FormControl>
-          <Box marginY={2} />
-          <Grid container>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <Typography variant="subtitle1" gutterBottom component="div">
-                  Kota/Kabupaten
-                </Typography>
-                <Autocomplete
-                  value={provinsiValue}
-                  onChange={(event, newValue) => {
-                    const value = { ...formValues };
-                    value.provinsi = newValue?.id;
-                    setProvinsiValue(newValue?.name);
-                    setFormValues(value);
-                  }}
-                  name="provinsi"
-                  options={ProvinsiData.map((item) => {
-                    return {
-                      ...item, label: `${item.name}`,
-                    };
-                  })}
-                  // eslint-disable-next-line max-len
-                  renderInput={(params) =>
-                    <TextField
-                      // VALIDATION
-                      // error={!formValues.provinsi} 
-                      {...params}
-                    />
-                  }
-                />
-                {/* VALIDATION */}
-                {/* {!formValues.provinsi &&
-              <FormHelperText error={!formValues.provinsi}>
-                Provinsi Harus diisi!
-              </FormHelperText>
-            } */}
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth >
-                <Typography variant="subtitle1" gutterBottom component="div">
-                  Daerah
-                </Typography>
-                <Autocomplete
-                  value={provinsiValue}
-                  onChange={(event, newValue) => {
-                    const value = { ...formValues };
-                    value.provinsi = newValue?.id;
-                    setProvinsiValue(newValue?.name);
-                    setFormValues(value);
-                  }}
-                  name="provinsi"
-                  options={ProvinsiData.map((item) => {
-                    return {
-                      ...item, label: `${item.name}`,
-                    };
-                  })}
-                  // eslint-disable-next-line max-len
-                  renderInput={(params) =>
-                    <TextField
-                      // VALIDATION
-                      // error={!formValues.provinsi} 
-                      {...params}
-                    />
-                  }
-                />
-                {/* VALIDATION */}
-                {/* {!formValues.provinsi &&
-              <FormHelperText error={!formValues.provinsi}>
-                Provinsi Harus diisi!
-              </FormHelperText>
-            } */}
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid container >
-        {/* LEFT SIDE */}
-        <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
-            <Typography variant="subtitle1" gutterBottom component="div">
-              Konstruksi
-            </Typography>
-            <RadioGroup
-              defaultValue="female"
-              name="radio-buttons-group"
-            >
-              <FormControlLabel
-                value="1"
-                control={
-                  <Radio />}
-                label="Kelas I"
-              />
-              <Typography
-                marginLeft={4}
-                variant="body2"
-                gutterBottom
-                color={theme.palette.disabled}
-                component="div"
-              >
-                Dinding, lantai, dan semua komponen penunjang strukturalnya serta penutup atap terbuat seluruhnya dan sepenuhnya dari bahan-bahan yang tidak mudah terbakar
-              </Typography>
-              <FormControlLabel
-                value="2"
-                control={
-                  <Radio />
-                }
-                label="Kelas II"
-              />
-              <Typography
-                marginLeft={4}
-                variant="body2"
-                gutterBottom
-                color={theme.palette.disabled}
-                component="div"
-              >
-                Penutup atap terbuat dari strap kayu keras, dinding-dinding mengandung bahan-bahan yang dapat terbakar sampai maksimum 20% dari luas dinding. Lantai dan struktur-struktur penunjangnya terbuat dari kayu.
-              </Typography>
-              <FormControlLabel
-                value="3"
-                control={
-                  <Radio />
-                }
-                label="Kelas 3"
-              />
-              <Typography
-                marginLeft={4}
-                variant="body2"
-                gutterBottom
-                color={theme.palette.disabled}
-                component="div"
-              >
-                Selain konstruksi Kelas I dan Kelas II
-              </Typography>
-            </RadioGroup>
-          </FormControl>
-        </Grid>
-        {/* RIGHT SIDE */}
-        <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
-            <Typography variant="subtitle1" gutterBottom component="div">
-              Perluasan
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  value={formValues.gempa}
-                  onChange={() => {
-                    const temp = { ...formValues };
-                    temp.gempa = !formValues.gempa;
-                    setFormValues(temp);
-                  }}
-                />}
-              label="Gempa Bumi"
-            />
-          </FormControl>
-        </Grid>
-      </Grid>
-      {/* --- MAIN CONTENT --- */}
-    </section>
-  )
+export default function Dashboard() {
+    return <DashboardContent />;
 }
-
-export default Home

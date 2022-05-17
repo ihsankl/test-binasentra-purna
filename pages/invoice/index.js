@@ -4,15 +4,87 @@ import {
     Button,
     Divider,
     Grid,
-    IconButton,
     Paper,
     Stack,
     Typography
 } from '@mui/material'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import axios from 'axios';
+import { API_URL } from '../../constant';
+import { useDispatch, useSelector } from 'react-redux';
+import { autoIncrement, rupiahFormatter } from '../../helper';
+import { createAsuransi } from '../../redux/slicer/asuransi.slicer';
 
 const Invoice = () => {
     const theme = useTheme();
+    const dispatch = useDispatch();
+    const asuransiData = useSelector((state) => state.AppState.asuransiData);
+    const AuthState = useSelector((state) => state.Auth);
+    const UserData = AuthState.userData;
+
+    const [newInvoice, setNewInvoice] = useState([]);
+
+    useEffect(() => {
+        getLastInvoice();
+        return () => {
+
+        }
+    }, [])
+
+    const getLastInvoice = async () => {
+        try {
+            const result = await axios.get(`${API_URL}/asuransi/last`);
+            if (result) {
+                const lastInvoice = result.data.data.nomorInvoice;
+                {/* format: K.001.XXXXX */ }
+
+                const splitLastInvoice = lastInvoice.split('.');
+                const newInvoiceLastDigit = parseInt(splitLastInvoice[2]) + 1;
+                const newInvoiceTemp = `K.001.${autoIncrement(newInvoiceLastDigit)}`
+                setNewInvoice(newInvoiceTemp);
+            }
+        } catch (error) {
+            setNewInvoice('K.001.00001');
+            console.log(error.message);
+        }
+    };
+
+    const PremiDasar = () => {
+        // Premi Dasar = Harga Bangunan x rate premi / 1000 x jangka waktu (dalam tahun)
+        const hargaBangunan = asuransiData.hargaBangunan;
+        const jangkaWaktu = asuransiData.jangkaWaktu;
+        return (hargaBangunan) * (asuransiData.ratePremi) / 1000 * (jangkaWaktu);
+    };
+
+    const Total = () => {
+        // Total yang harus dibayar = Premi Dasar + Biaya Administrasi
+        const premiDasar = PremiDasar();
+        const biayaAdmin = 10000;
+        return Number(premiDasar) + Number(biayaAdmin);
+    };
+
+    const handleOnsubmit = () => {
+        try {
+            const data = {
+                jangkaWaktuPertanggungan: asuransiData?.jangkaWaktu,
+                hargaBangunan: asuransiData?.hargaBangunan,
+                konstruksi: asuransiData?.konstruksi,
+                alamat: asuransiData?.alamat,
+                provinsi: asuransiData?.provinsi,
+                kabupaten: asuransiData?.kabupaten,
+                daerah: asuransiData?.daerah,
+                gempa: asuransiData?.gempa,
+                nomorInvoice: newInvoice,
+                userId: UserData?.id,
+                premiDasar: PremiDasar(),
+                okupasi: asuransiData?.okupasi,
+                total: Total(),
+            }
+            dispatch(createAsuransi(data));
+        } catch (error) {
+            console.log(error.message);
+        }
+    };
     return (
         <section style={{ padding: "2em", background: theme.palette.grey[200], height: "2000px" }}>
             <Paper sx={{ padding: "1em" }}>
@@ -53,14 +125,14 @@ const Invoice = () => {
                                 Rumah Tinggal bukan Ruko
                             </Typography>
                             <Typography variant="h6" gutterBottom component="div">
-                                No. Invoice: K.001.0001
+                                No. Invoice: {newInvoice}
                             </Typography>
                         </Stack>
                     </Grid>
                     <Grid item xs={2}>
                         <Stack direction="row" alignItems="center" height="100%">
                             <Typography variant="h6" gutterBottom component="div">
-                                1 Tahun
+                                {asuransiData?.jangkaWaktu} Tahun
                             </Typography>
                         </Stack>
                     </Grid>
@@ -89,7 +161,7 @@ const Invoice = () => {
                     <Grid item xs={2}>
                         <Stack direction="row" alignItems="center" height="100%">
                             <Typography variant="h6" gutterBottom component="div">
-                                IDR 1,000,000,000.00
+                                {rupiahFormatter(asuransiData?.hargaBangunan)}
                             </Typography>
                         </Stack>
                     </Grid>
@@ -110,17 +182,25 @@ const Invoice = () => {
                             }}
                         >
                             <Typography borderBottom="thin solid rgba(0, 0, 0, 0.12)" padding="1.5em" width="100%" textAlign="right" variant="h4" gutterBottom component="div">
-                                {`Premi Dasar: IDR 38,750.00`}
+                                {`Premi Dasar: ${rupiahFormatter(PremiDasar())}`}
                             </Typography>
                             <Typography borderBottom="thin solid rgba(0, 0, 0, 0.12)" padding="1.5em" width="100%" textAlign="right" variant="h4" gutterBottom component="div">
-                                {`Biaya Admin: IDR 10,000.00`}
+                                {`Biaya Admin: ${rupiahFormatter(10000)}`}
                             </Typography>
                             <Typography borderBottom="thin solid rgba(0, 0, 0, 0.12)" padding="1.5em" width="100%" textAlign="right" variant="h4" gutterBottom component="div">
-                                {`Total: IDR 48,750.00`}
+                                {`Total: ${rupiahFormatter(Total())}`}
                             </Typography>
                         </Stack>
                         <Stack direction="row" width="100%" justifyContent="flex-end">
-                            <Button variant="contained" sx={{ borderRadius: "9999px", padding: "1em 2em" }}>Lanjutkan Ke Pembayaran</Button>
+                            <Button
+                                onClick={handleOnsubmit}
+                                variant="contained"
+                                sx={{ borderRadius: "9999px", padding: "1em 2em" }}
+                                // disabled if no asuransiData
+                                disabled={!asuransiData || Object.keys(asuransiData).length === 0}
+                            >
+                                Lanjutkan Ke Pembayaran
+                            </Button>
                         </Stack>
                     </Grid>
                     {/* ---INVOICE--- */}
@@ -131,4 +211,4 @@ const Invoice = () => {
     )
 }
 
-export default Invoice
+export default Invoice;

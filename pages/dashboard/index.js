@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiDrawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
@@ -18,8 +18,10 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MainListItems from './listItems';
 import Content from './Content';
 import { useRouter } from 'next/router';
-import Approval from "../../component/approval";
-import { Button } from '@mui/material';
+import { Menu, MenuItem } from '@mui/material';
+import { capitalizeFirstLetter } from '../../helper';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../../redux/slicer/auth.slicer';
 
 const drawerWidth = 240;
 
@@ -67,11 +69,16 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
-const mdTheme = createTheme();
-
 function DashboardContent() {
+    const AuthState = useSelector((state) => state.Auth);
+    const tokens = AuthState.tokens;
+    const UserData = AuthState.userData;
+    const isAdmin = UserData?.role === 'admin';
+
     const router = useRouter();
-    const [menu, setMenu] = React.useState("");
+    const dispatch = useDispatch();
+    const [menu, setMenu] = React.useState(!isAdmin ? 'profile' : 'request');
+    const [anchorEl, setAchorEl] = React.useState(null);
 
     const [open, setOpen] = React.useState(true);
     const toggleDrawer = () => {
@@ -79,85 +86,113 @@ function DashboardContent() {
     };
 
     return (
-        <ThemeProvider theme={mdTheme}>
-            <Box sx={{ display: 'flex' }}>
-                <CssBaseline />
-                <AppBar position="absolute" open={open}>
-                    <Toolbar
-                        sx={{
-                            pr: '24px', // keep right padding when drawer closed
-                        }}
-                    >
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            aria-label="open drawer"
-                            onClick={toggleDrawer}
-                            sx={{
-                                marginRight: '36px',
-                                ...(open && { display: 'none' }),
-                            }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                        <Typography
-                            component="h1"
-                            variant="h6"
-                            color="inherit"
-                            noWrap
-                            sx={{ flexGrow: 1 }}
-                        >
-                            {menu === 'approval' ? 'Approval' : 'Profile'}
-                        </Typography>
-                        <IconButton color="inherit">
-                            <AccountCircleIcon />
-                        </IconButton>
-                    </Toolbar>
-                </AppBar>
-                <Drawer variant="permanent" open={open}>
-                    <Toolbar
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'flex-end',
-                            px: [1],
-                        }}
-                    >
-                        <IconButton onClick={toggleDrawer}>
-                            <ChevronLeftIcon />
-                        </IconButton>
-                    </Toolbar>
-                    <Divider />
-                    <List component="nav">
-                        <MainListItems setMenu={setMenu} />
-                        <Divider sx={{ my: 1 }} />
-                    </List>
-                </Drawer>
-                <Box
-                    component="main"
+        <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+            <AppBar position="absolute" open={open}>
+                <Toolbar
                     sx={{
-                        backgroundColor: (theme) =>
-                            theme.palette.mode === 'light'
-                                ? theme.palette.grey[100]
-                                : theme.palette.grey[900],
-                        flexGrow: 1,
-                        height: '100vh',
-                        overflow: 'auto',
+                        pr: '24px', // keep right padding when drawer closed
                     }}
                 >
-                    <Toolbar />
-                    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                                    <Content menu={menu} />
-                                </Paper>
-                            </Grid>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        aria-label="open drawer"
+                        onClick={toggleDrawer}
+                        sx={{
+                            marginRight: '36px',
+                            ...(open && { display: 'none' }),
+                        }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <Typography
+                        component="h1"
+                        variant="h6"
+                        color="inherit"
+                        noWrap
+                        sx={{ flexGrow: 1 }}
+                    >
+                        {capitalizeFirstLetter(menu)}
+                    </Typography>
+                    <IconButton onClick={(e) => setAchorEl(e.currentTarget)} color="inherit">
+                        <AccountCircleIcon />
+                    </IconButton>
+                    <Menu
+                        id="menu-appbar"
+                        anchorEl={anchorEl}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        open={!!anchorEl}
+                        onClose={() => setAchorEl(null)}
+                    >
+                        <MenuItem onClick={() => {
+                            setMenu('profile');
+                            setAchorEl(null)
+                        }}>
+                            My Profile
+                        </MenuItem>
+                        <MenuItem onClick={() => {
+                            const data = {
+                                refreshToken: tokens.refresh.token
+                            };
+                            dispatch(logout(data));
+                        }}>
+                            Logout
+                        </MenuItem>
+                    </Menu>
+                </Toolbar>
+            </AppBar>
+            <Drawer variant="permanent" open={open}>
+                <Toolbar
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        px: [1],
+                    }}
+                >
+                    <IconButton onClick={toggleDrawer}>
+                        <ChevronLeftIcon />
+                    </IconButton>
+
+                </Toolbar>
+                <Divider />
+                <List component="nav">
+                    <MainListItems setMenu={setMenu} />
+                    <Divider sx={{ my: 1 }} />
+                </List>
+            </Drawer>
+            <Box
+                component="main"
+                sx={{
+                    backgroundColor: (theme) =>
+                        theme.palette.mode === 'light'
+                            ? theme.palette.grey[100]
+                            : theme.palette.grey[900],
+                    flexGrow: 1,
+                    height: '100vh',
+                    overflow: 'auto',
+                }}
+            >
+                <Toolbar />
+                <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+                    <Grid container spacing={3}>
+                        <Grid item xs={12}>
+                            <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+                                <Content menu={menu || ""} />
+                            </Paper>
                         </Grid>
-                    </Container>
-                </Box>
+                    </Grid>
+                </Container>
             </Box>
-        </ThemeProvider>
+        </Box>
     );
 }
 
