@@ -14,10 +14,12 @@ import { API_URL } from '../../constant';
 import { useDispatch, useSelector } from 'react-redux';
 import { autoIncrement, rupiahFormatter } from '../../helper';
 import { createAsuransi } from '../../redux/slicer/asuransi.slicer';
+import { useRouter } from 'next/router';
 
 const Invoice = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
+    const router = useRouter();
     const asuransiData = useSelector((state) => state.AppState.asuransiData);
     const AuthState = useSelector((state) => state.Auth);
     const UserData = AuthState.userData;
@@ -81,6 +83,7 @@ const Invoice = () => {
                 total: Total(),
             }
             dispatch(createAsuransi(data));
+            router.push('/dashboard');
         } catch (error) {
             console.log(error.message);
         }

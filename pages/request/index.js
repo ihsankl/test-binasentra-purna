@@ -274,83 +274,81 @@ const Home = () => {
             } */}
             </FormControl>
             <Box marginY={2} />
-            <Grid container>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <Typography variant="subtitle1" gutterBottom component="div">
-                    Kota/Kabupaten
-                  </Typography>
-                  <Autocomplete
-                    disabled={KabupatenData.length === 0}
-                    value={kabupatenValue}
-                    onChange={(event, newValue) => {
-                      const value = { ...formValues };
-                      value.kabupaten = newValue?.name;
-                      setKabupatenValue(newValue?.name);
-                      setFormValues(value);
-                      getWilayah(null, newValue?.id);
-                    }}
-                    name="kabupaten"
-                    options={KabupatenData.map((item) => {
-                      return {
-                        ...item, label: `${item.name}`,
-                      };
-                    })}
-                    // eslint-disable-next-line max-len
-                    renderInput={(params) =>
-                      <TextField
-                        // VALIDATION
-                        // error={!formValues.provinsi} 
-                        {...params}
-                      />
-                    }
-                  />
-                  {/* VALIDATION */}
-                  {/* {!formValues.provinsi &&
+            <Stack direction='row' gap='1em'>
+              <FormControl fullWidth>
+                <Typography variant="subtitle1" gutterBottom component="div">
+                  Kota/Kabupaten
+                </Typography>
+                <Autocomplete
+                  disabled={KabupatenData.length === 0}
+                  value={kabupatenValue}
+                  onChange={(event, newValue) => {
+                    const value = { ...formValues };
+                    value.kabupaten = newValue?.name;
+                    setKabupatenValue(newValue?.name);
+                    setFormValues(value);
+                    getWilayah(null, newValue?.id);
+                  }}
+                  name="kabupaten"
+                  options={KabupatenData.map((item) => {
+                    return {
+                      ...item, label: `${item.name}`,
+                    };
+                  })}
+                  // eslint-disable-next-line max-len
+                  renderInput={(params) =>
+                    <TextField
+                      // VALIDATION
+                      // error={!formValues.provinsi} 
+                      {...params}
+                    />
+                  }
+                />
+                {/* VALIDATION */}
+                {/* {!formValues.provinsi &&
               <FormHelperText error={!formValues.provinsi}>
                 Provinsi Harus diisi!
               </FormHelperText>
             } */}
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth >
-                  <Typography variant="subtitle1" gutterBottom component="div">
-                    Daerah
-                  </Typography>
-                  <Autocomplete
-                    disabled={DaerahData.length === 0}
-                    value={daerahValue}
-                    onChange={(event, newValue) => {
-                      const value = { ...formValues };
-                      value.daerah = newValue?.name;
-                      setDaerahValue(newValue?.name);
-                      setFormValues(value);
-                    }}
-                    name="daerah"
-                    options={DaerahData.map((item) => {
-                      return {
-                        ...item, label: `${item.name}`,
-                      };
-                    })}
-                    // eslint-disable-next-line max-len
-                    renderInput={(params) =>
-                      <TextField
-                        // VALIDATION
-                        // error={!formValues.provinsi} 
-                        {...params}
-                      />
-                    }
-                  />
-                  {/* VALIDATION */}
-                  {/* {!formValues.provinsi &&
+              </FormControl>
+
+              <FormControl fullWidth >
+                <Typography variant="subtitle1" gutterBottom component="div">
+                  Daerah
+                </Typography>
+                <Autocomplete
+                  disabled={DaerahData.length === 0}
+                  value={daerahValue}
+                  onChange={(event, newValue) => {
+                    const value = { ...formValues };
+                    value.daerah = newValue?.name;
+                    setDaerahValue(newValue?.name);
+                    setFormValues(value);
+                  }}
+                  name="daerah"
+                  options={DaerahData.map((item) => {
+                    return {
+                      ...item, label: `${item.name}`,
+                    };
+                  })}
+                  // eslint-disable-next-line max-len
+                  renderInput={(params) =>
+                    <TextField
+                      // VALIDATION
+                      // error={!formValues.provinsi} 
+                      {...params}
+                    />
+                  }
+                />
+                {/* VALIDATION */}
+                {/* {!formValues.provinsi &&
               <FormHelperText error={!formValues.provinsi}>
                 Provinsi Harus diisi!
               </FormHelperText>
             } */}
-                </FormControl>
-              </Grid>
-            </Grid>
+              </FormControl>
+
+            </Stack>
           </Grid>
         </Grid>
         <Grid container >

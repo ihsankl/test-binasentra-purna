@@ -83,8 +83,7 @@ const authenticationSlice = createSlice({
         builder.addCase(login.rejected, (state, action) => {
             state.isLoading = false;
             state.error = {
-                message: action.payload.response.data.error.message ??
-                    'Something went wrong',
+                message: 'Something went wrong',
                 state: true,
             };
             state.isSuccess = false;
